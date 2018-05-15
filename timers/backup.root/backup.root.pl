@@ -75,7 +75,9 @@ my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of
 my $return = tarsnap();
 $return ? print "yeaayyy\n" : die "Error: failed to upload to Tarsnap";
 
-# rotate tarsnap archives
+# rotate tarsnap archives via tarsnapper
+# sudo /usr/bin/tarsnapper --target "x1-snap01-\$date.img" --deltas 1d 7d 30d 90d 180d - expire --dry-run
+
 
 sub tarsnap {
     my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
