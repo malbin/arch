@@ -1,7 +1,0 @@
-[Unit]
-Description=Monitors snapshot allocation
-
-[Service]
-Persistent=true
-Type=oneshot
-ExecStart=/home/jaryd/scratch/arch/timers/monitor.snap.pl

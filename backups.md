@@ -11,7 +11,13 @@ packages:
 /home: 
 - tarsnap config that ignores dropbox
 
-## Disk Snapshots --> Tarsnap (root)
+## Root: LVM snapshots --> tarsnap
+High level strategy:
+1. Daily snapshot (lvremove, lvcreate)
+2. dd img snapshot, zerofree, tarsnap
+3. grandfather-father-son tarsnap rotation
+
+Always have a live snapshot in LVM, always have backups offsite.
 
 # Prepare for lv snapshots
 1. https://blog.shadypixel.com/how-to-shrink-an-lvm-volume-safely/
@@ -22,14 +28,14 @@ https://wiki.archlinux.org/index.php/Create_root_filesystem_snapshots_with_LVM
 ## Pre-reqs and testing
 https://wiki.archlinux.org/index.php/LVM#Snapshots
 note: 10G is overkill as this snapshot should only really exist for the length of time it takes to execute dd
+check status of tarsnap upload: ps aux |grep tarsnap |egrep -v 'sudo|grep' | awk '{print $2}' | xargs watch -n5 sudo kill -USR1
+
+sudo lvremove /dev/x1/snap01 
 sudo lvcreate --size 10G --snapshot --name snap01 /dev/x1/root
-
-# image the snapshot
-note: mostly empty space but still a full image of the disk so 50G
 sudo dd if=/dev/mapper/x1-snap01 of=x1-snap01.img status=progress
-
-# remove the snapshot after dd returns 0
-TODO: command
+sudo zerofree x1-snap01.img 
+epoch=$(date +%s) && time sudo tarsnap -c -f x1-snap01-$epoch.img x1-snap01.img 
+sudo tarsnap --list-archives
 
 # upload the snapshot to tarsnap
 epoch=$(date +%s) && sudo tarsnap -c -f x1-snap01-$epoch.img x1-snap01.img
@@ -37,11 +43,23 @@ epoch=$(date +%s) && sudo tarsnap -c -f x1-snap01-$epoch.img x1-snap01.img
 # repeat and validate
 TODO: data should not be doubled :)
 
-# this should only happen once per day max (lockfile)
-TODO: touch a lockfile after validation step
- - If can't validate then should clean up after itself (remove any img file created that day)
+# limit scope, trap errors
+TODO: update mtime of lockfile after all good
+TODO: ensure on a known network (home/work)
+- Check network
+ - iw dev | grep ssid |awk '{print $2}' --> returns: 318 (or w/e ssid is)
+ - exit if not in known network hash
 
-## AUR packages
+- Partial dd of snap img:
+ - determine through filesize (should always be same number of bytes)
+ - determine through exit code of dd
+ - rm partial img; restart dd
+
+- Partial tarsnap upload:
+ - determine through exit code (anything nonzero)
+ - restart tarsnap -c
+
+## Pacman / AUR
 ```shell
 [jaryd@locutus ~ ]$ ls aur/ | while read line; do url=$(grep url aur/dropbox/.git/config | awk '{print $3}') && echo "$line: $url"; done
 dropbox: https://aur.archlinux.org/dropbox.git

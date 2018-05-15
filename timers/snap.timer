@@ -1,6 +1,0 @@
-[Unit]
-Description=Monitors snapshot allocation
-
-[Timer]
-OnCalender=OnCalendar=*:0/15
-Persistent=true
