@@ -65,8 +65,49 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # proceed with img creation
-my $ret = dd();
-$ret ? print "hooray!!\n" : print "boooooo!\n";
+# subbing out b/c lots of stuff here.
+#dd();
+
+# zero the empty bits
+my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$epoch.img);
+#system ($zero_cmd);
+
+# upload to tarsnap
+my $return = tarsnap();
+$return ? print "yeaayyy\n" : die "Error: failed to upload to Tarsnap";
+
+# rotate tarsnap archives
+
+sub tarsnap {
+    my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$epoch.img";
+    my $ts_dst = "$snapshot{\"dd_of_app\"}.$epoch.img";
+    $ts_src = "/home/backups/x1-snap01.1526349453.img";
+    $ts_dst = "x1-snap01.1526349453.img";
+
+    # this is a long command, can send the tarsnap proc a SIG USR1 to get status
+    print "Starting Tarsnap upload. This may take awhile. Use the following to print status:\n";
+    print "ps aux |grep tarsnap |egrep -v 'sudo|grep' | awk '{print \$2}' | xargs watch -n5 sudo kill -USR1\n";
+
+    # 3 tries to upload to tarsnap, same as in sub dd
+    my $try = 0;
+    LINE: while ($try <= 2) {
+        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap --quiet -c -f $ts_dst $ts_src);
+        #print $ts_cmd,"\n";
+        #die;
+
+        my $ret = system($ts_cmd);
+        if ($ret) {
+            warn "Something went wrong! Trying again...";
+            $try += 1;
+            next LINE;
+            }
+        else {
+            return 1;
+        }
+    }
+    warn "tries exceeded... something terribly wrong.";
+    return 0;
+}
 
 sub dd {
     # easier var names
@@ -82,7 +123,7 @@ sub dd {
     LINE: while ($try <= 2) {
         # clean up from the failed attempt
         unlink $dd_wc if -e $dd_wc;
-        my $dd_cmd = qq(echo "dd attempt $try..." && sudo dd if=$snapshot{"dd_if"} of=$dd_of);
+        my $dd_cmd = qq(/usr/bin/echo "dd attempt $try..." && sudo /usr/bin/dd if=$snapshot{"dd_if"} of=$dd_of);
         my $ret = system($dd_cmd);
         if ($ret) {
             warn "Something went wrong! Trying again...";
@@ -108,25 +149,25 @@ sub dd {
 }
 
 sub remove_snapshot {
-    my $lv_remove_cmd = qq(sudo lvremove -y $snapshot{"lv_path"});
+    my $lv_remove_cmd = qq(sudo /usr/bin/lvremove -y $snapshot{"lv_path"});
     $lv = system($lv_remove_cmd);
     die "WTF...\n" if $lv;
     return;
 }
 
 sub create_snapshot {
-    my $lv_create_cmd = qq(sudo lvcreate --size $snapshot{"lv_size"} --snapshot --name $snapshot{"lv_name"} $snapshot{"origin"});
+    my $lv_create_cmd = qq(sudo /usr/bin/lvcreate --size $snapshot{"lv_size"} --snapshot --name $snapshot{"lv_name"} $snapshot{"origin"});
     $lv = system($lv_create_cmd);
     die "WTF...\n" if $lv;
     return;
 }
 
 sub lv_snap_info {
-    my $lv_snap_create = qx(sudo lvdisplay $snapshot{"lv_path"} | grep Creation);
+    my $lv_snap_create = qx(sudo /usr/bin/lvdisplay $snapshot{"lv_path"} | grep Creation);
     chomp $lv_snap_create;
     my ($snap_date) = $lv_snap_create =~ /(\d{4}-\d{2}-\d{2})/;
     
-    my $lv_snap_alloc  = qx(sudo lvdisplay $snapshot{"lv_path"} | grep Allocated | awk '{print \$4}');
+    my $lv_snap_alloc  = qx(sudo /usr/bin/lvdisplay $snapshot{"lv_path"} | grep Allocated | awk '{print \$4}');
     chomp $lv_snap_alloc;
     $lv_snap_alloc =~ s/\%//g;
 
