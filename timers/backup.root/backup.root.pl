@@ -83,10 +83,6 @@ sub tarsnap {
     my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
     my $ts_dst = "$snapshot{\"dd_of_app\"}.$curr_date.img";
 
-    # this is a long command, can send the tarsnap proc a SIG USR1 to get status
-    print "Starting Tarsnap upload. This may take awhile. Use the following to print status:\n";
-    print "ps aux |grep tarsnap |egrep -v 'sudo|grep' | awk '{print \$2}' | xargs watch -n5 sudo kill -USR1\n";
-
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
     LINE: while ($try <= 2) {
