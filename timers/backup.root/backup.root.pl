@@ -28,7 +28,6 @@ my @trusted_networks = (
 
 # today's date: yyyy-mm-dd
 my $curr_date = qx(date +%F);
-my $epoch = time;
 chomp $curr_date;
 
 # check snapshot status
@@ -69,7 +68,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 #dd();
 
 # zero the empty bits
-my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$epoch.img);
+my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
 #system ($zero_cmd);
 
 # upload to tarsnap
@@ -79,8 +78,8 @@ $return ? print "yeaayyy\n" : die "Error: failed to upload to Tarsnap";
 # rotate tarsnap archives
 
 sub tarsnap {
-    my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$epoch.img";
-    my $ts_dst = "$snapshot{\"dd_of_app\"}.$epoch.img";
+    my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
+    my $ts_dst = "$snapshot{\"dd_of_app\"}.$curr_date.img";
     $ts_src = "/home/backups/x1-snap01.1526349453.img";
     $ts_dst = "x1-snap01.1526349453.img";
 
@@ -112,7 +111,7 @@ sub tarsnap {
 sub dd {
     # easier var names
     my $bytes_expected = $snapshot{"dd_bytes"};
-    my $dd_of = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$epoch.img";
+    my $dd_of = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
     my $dd_wc = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.*";
 
     # start by cleaning up
