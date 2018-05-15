@@ -65,7 +65,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 
 # proceed with img creation
 # subbing out b/c lots of stuff here.
-#dd();
+dd();
 
 # zero the empty bits
 my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
@@ -73,7 +73,7 @@ my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of
 
 # upload to tarsnap
 my $return = tarsnap();
-$return ? print "yeaayyy\n" : die "Error: failed to upload to Tarsnap";
+$return ? print "OK.\n" : die "Error: failed to upload to Tarsnap";
 
 # rotate tarsnap archives via tarsnapper
 # sudo /usr/bin/tarsnapper --target "x1-snap01-\$date.img" --deltas 1d 7d 30d 90d 180d - expire --dry-run
@@ -82,8 +82,6 @@ $return ? print "yeaayyy\n" : die "Error: failed to upload to Tarsnap";
 sub tarsnap {
     my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
     my $ts_dst = "$snapshot{\"dd_of_app\"}.$curr_date.img";
-    $ts_src = "/home/backups/x1-snap01.1526349453.img";
-    $ts_dst = "x1-snap01.1526349453.img";
 
     # this is a long command, can send the tarsnap proc a SIG USR1 to get status
     print "Starting Tarsnap upload. This may take awhile. Use the following to print status:\n";
@@ -92,9 +90,7 @@ sub tarsnap {
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
     LINE: while ($try <= 2) {
-        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap --quiet -c -f $ts_dst $ts_src);
-        #print $ts_cmd,"\n";
-        #die;
+        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap --quiet -c -f $ts_dst $ts_src 1>/dev/null 2>&1);
 
         my $ret = system($ts_cmd);
         if ($ret) {
@@ -124,7 +120,7 @@ sub dd {
     LINE: while ($try <= 2) {
         # clean up from the failed attempt
         unlink $dd_wc if -e $dd_wc;
-        my $dd_cmd = qq(/usr/bin/echo "dd attempt $try..." && sudo /usr/bin/dd if=$snapshot{"dd_if"} of=$dd_of);
+        my $dd_cmd = qq(/usr/bin/echo "dd attempt $try..." && sudo /usr/bin/dd if=$snapshot{"dd_if"} of=$dd_of 1>/dev/null 2>&1);
         my $ret = system($dd_cmd);
         if ($ret) {
             warn "Something went wrong! Trying again...";
