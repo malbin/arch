@@ -4,6 +4,9 @@ use warnings;
 
 use File::stat;
 use Time::localtime;
+use Time::HiRes qq(gettimeofday);
+
+my $start = gettimeofday();
 
 # bail out if not root
 die "needs root" if $>;
@@ -89,6 +92,9 @@ my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of
 my $ts_ret = tarsnap();
 if ($ts_ret) {
     print "Tarsnap OK\n";
+    my $end = gettimeofday();
+    my $elapsed = $end - $start;
+    print "\nCompleted in $elapsed\n";
 } else {
     warn "Error uploading to Tarsnap...";
     exit;
