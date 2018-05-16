@@ -5,6 +5,9 @@ use warnings;
 use File::stat;
 use Time::localtime;
 
+# bail out if not root
+die "needs root" if $>;
+
 ### config
 my %snapshot = (
     lv_path   => "/dev/x1/snap01",
