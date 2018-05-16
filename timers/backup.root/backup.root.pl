@@ -141,9 +141,9 @@ sub tarsnap {
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
     LINE: while ($try <= 2) {
-        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap --quiet -c -f $ts_dst $ts_src 1>/dev/null 2>&1);
-
+        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap -c -f $ts_dst $ts_src 1>/dev/null 2>&1);
         my $ret = system($ts_cmd);
+
         if ($ret) {
             warn "Something went wrong! Trying again...";
             $try += 1;
