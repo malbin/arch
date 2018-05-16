@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use File::stat;
-use DDP;
+use Time::localtime;
 
 ### config
 my %snapshot = (
@@ -17,8 +17,12 @@ my %snapshot = (
     dd_of_dir => "/home/backups",
     dd_of_app => "x1-snap01",
     dd_bytes  => "53687091200" # total bytes of good img, this should never change
-
 );
+
+# this is the file that gets modified after the whole process completes successfully
+# if we see it has been modified on the same day then we skip the dd/tarsnap upload
+# script should still check health/status of snapshots.
+my $touchfile = "$snapshot{\"dd_of_dir\"}/backup.root.run";
 
 my @trusted_networks = (
     "318",
@@ -53,7 +57,11 @@ if ($snapshot_allocated > $snapshot{"threshold"}) {
     die "Snapshot exceeded allocation threshold: $snapshot_allocated%... WAT!\n"
 }
 
-# at this point we're confident we're working with a reasonably fresh snapshot
+# check to see if we have already had a successful run today
+# check_lockfile() returns 1 if there is a date mismatch
+exit unless check_lockfile();
+
+# at this point we're confident that we're working with a fresh snapshot
 # before doing anything else confirm we're in a known safe location
 my $curr_network_cmd = qq(iw dev | grep ssid |awk '{print \$2}');
 my $curr_network = qx\$curr_network_cmd\;
@@ -65,19 +73,63 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 
 # proceed with img creation
 # subbing out b/c lots of stuff here.
-dd();
+# $dd_ret == 1 if successful
+my $dd_ret = dd();
+$dd_ret ? print "dd OK.\n" : die "Error: dd failed";
 
 # zero the empty bits
 my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
 #system ($zero_cmd);
 
 # upload to tarsnap
-my $return = tarsnap();
-$return ? print "OK.\n" : die "Error: failed to upload to Tarsnap";
+# $ts_ret == 1 if successful
+my $ts_ret = tarsnap();
+if ($ts_ret) {
+    print "Tarsnap OK\n";
+} else {
+    warn "Error uploading to Tarsnap...";
+    exit;
+}
 
-# rotate tarsnap archives via tarsnapper
-# sudo /usr/bin/tarsnapper --target "x1-snap01-\$date.img" --deltas 1d 7d 30d 90d 180d - expire --dry-run
+if (run_cleanup()) {
+    exit;
+} else {
+    warn "Failed to clean up...";
+    exit;
+}
 
+# configure tarsnapper on its own. out of scope of this script.
+
+sub run_cleanup {
+    system("touch $touchfile");
+    my $un_ret = unlink "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
+    if ($un_ret) {
+        return 1;
+    } else {
+        warn "Error: couldn't unlink img: $!";
+        exit;
+    }
+}
+
+sub check_lockfile {
+    unless (-e $touchfile) {
+        warn "touchfile missing... assume backup has not run...";
+        return 1;
+    }
+
+    my $mtime = ctime(stat($touchfile)->mtime);
+    my @c_date = split(/-/,$curr_date); # 2018-05-15
+    my @m_date = split(/\s/,$mtime); # Tue May 15 22:25:38 2018
+
+    # this comparison is naive b/c i'm lazy and don't want to convert the timestamps
+    # there is an edge case where if last mtime was the same day number as current day
+    # we'll incorrectly assume a backup has been run recently. derp. i don't care.
+    if ($c_date[2] == $m_date[2]) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
 
 sub tarsnap {
     my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
@@ -109,6 +161,7 @@ sub dd {
     my $dd_wc = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.*";
 
     # start by cleaning up
+    # we shouldn't have images in here, but let's do it just in case
     system("rm $dd_wc 1>/dev/null 2>&1");
 
     # 3 tries to make an image
