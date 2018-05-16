@@ -25,4 +25,4 @@ done
 
 # build and run tar cmd
 tar_cmd="$tarsnap -cf $tarsnap_dest $skip $home"
-bash -c "$tar_cmd"
+bash -c "echo $tar_cmd"
