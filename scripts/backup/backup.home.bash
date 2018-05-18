@@ -2,13 +2,13 @@
 backup_path="/home/backups"
 home="/home/jaryd"
 date=$(date +%F)
-tarsnap_dest="$(uname -n)-home-$date"
+tarsnap_dest="x1-home-$date"
 
 # tar
 tar=$(which tar)
 tarsnap=$(which tarsnap)
 
-# config
+# exclude this crap
 skip_dirs=( 
   aur
   Dropbox 
@@ -16,8 +16,6 @@ skip_dirs=(
   .cache 
   Downloads
 )
-
-# skip everything in
 for dir in "${skip_dirs[@]}"
 do
   skip="$skip--exclude='$home/$dir' "
@@ -25,4 +23,4 @@ done
 
 # build and run tar cmd
 tar_cmd="$tarsnap -cf $tarsnap_dest $skip $home"
-bash -c "echo $tar_cmd"
+bash -c "$tar_cmd"

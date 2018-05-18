@@ -11,6 +11,9 @@ my $start = gettimeofday();
 # bail out if not root
 die "needs root" if $>;
 
+# if debug is set then we don't do dd or tarsnap
+my $debug = 0;
+
 ### config
 my %snapshot = (
     lv_path   => "/dev/x1/snap01",
@@ -28,7 +31,7 @@ my %snapshot = (
 # this is the file that gets modified after the whole process completes successfully
 # if we see it has been modified on the same day then we skip the dd/tarsnap upload
 # script should still check health/status of snapshots.
-my $touchfile = "$snapshot{\"dd_of_dir\"}/backup.root.run";
+my $touchfile = "$snapshot{\"dd_of_dir\"}/backup.root.lock";
 
 my @trusted_networks = (
     "318",
@@ -80,7 +83,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 # proceed with img creation
 # subbing out b/c lots of stuff here.
 # $dd_ret == 1 if successful
-my $dd_ret = dd();
+my $dd_ret = dd() if !$debug;
 $dd_ret ? print "dd OK.\n" : die "Error: dd failed";
 
 # zero the empty bits
@@ -89,7 +92,7 @@ my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of
 
 # upload to tarsnap
 # $ts_ret == 1 if successful
-my $ts_ret = tarsnap();
+my $ts_ret = tarsnap() if !$debug;
 if ($ts_ret) {
     print "Tarsnap OK\n";
     my $end = gettimeofday();
