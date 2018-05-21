@@ -31,7 +31,7 @@ my %snapshot = (
 # this is the file that gets modified after the whole process completes successfully
 # if we see it has been modified on the same day then we skip the dd/tarsnap upload
 # script should still check health/status of snapshots.
-my $touchfile = "$snapshot{\"dd_of_dir\"}/backup.root.lock";
+my $touchfile = qq($snapshot{"dd_of_dir"}/backup.root.lock);
 
 my @trusted_networks = (
     "318",
@@ -39,7 +39,7 @@ my @trusted_networks = (
     "duckduckgo"
 );
 
-# today's date: yyyy-mm-dd
+# today: yyyy-mm-dd
 my $curr_date = qx(date +%F);
 chomp $curr_date;
 
@@ -48,7 +48,7 @@ chomp $curr_date;
 my $lv_check_cmd = qq(sudo lvdisplay $snapshot{"lv_path"} 1>/dev/null 2>&1);
 my $lv = system($lv_check_cmd);
 if ($lv) {
-    print "Snapshot not found at $snapshot{\"lv_path\"}... Taking snapshot of $snapshot{\"origin\"}.\n";
+    print "Snapshot not found at $snapshot{'lv_path'}... Taking snapshot of $snapshot{'origin'}.\n";
     create_snapshot();
 }
 
@@ -68,7 +68,7 @@ if ($snapshot_allocated > $snapshot{"threshold"}) {
 
 # check to see if we have already had a successful run today
 # check_lockfile() returns 1 if there is a date mismatch
-exit unless check_lockfile();
+die "Lockfile current: nothing to do" unless check_lockfile();
 
 # at this point we're confident that we're working with a fresh snapshot
 # before doing anything else confirm we're in a known safe location
@@ -114,7 +114,7 @@ if (run_cleanup()) {
 
 sub run_cleanup {
     system("touch $touchfile");
-    my $un_ret = unlink "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
+    my $un_ret = unlink "$snapshot{'dd_of_dir'}/$snapshot{'dd_of_app'}.$curr_date.img";
     if ($un_ret) {
         return 1;
     } else {
@@ -144,8 +144,8 @@ sub check_lockfile {
 }
 
 sub tarsnap {
-    my $ts_src = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
-    my $ts_dst = "$snapshot{\"dd_of_app\"}.$curr_date.img";
+    my $ts_src = qq($snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
+    my $ts_dst = qq($snapshot{"dd_of_app"}.$curr_date.img);
 
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
@@ -169,8 +169,8 @@ sub tarsnap {
 sub dd {
     # easier var names
     my $bytes_expected = $snapshot{"dd_bytes"};
-    my $dd_of = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.$curr_date.img";
-    my $dd_wc = "$snapshot{\"dd_of_dir\"}/$snapshot{\"dd_of_app\"}.*";
+    my $dd_of = qq($snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
+    my $dd_wc = qq($snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.*);
 
     # start by cleaning up
     # we shouldn't have images in here, but let's do it just in case
