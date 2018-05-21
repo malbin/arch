@@ -7,18 +7,21 @@ use Time::localtime;
 use Time::HiRes qq(gettimeofday);
 
 my $t0 = gettimeofday();
+my $debug = 0;
 
 # bail if not root
 die "needs root" if $>;
 
-# today's date: yyyy-mm-dd
-my $curr_date = qx(date +%F);
-chomp $curr_date;
+# dates: yyyy-mm-dd
+my $today = qx(date +%F);
+chomp $today;
+my $yesterday = qx/date -d "yesterday" +%F/;
+chomp $yesterday;
 
 my %config = (
     backup_path   => "/home/backups",
     backup_target => "/home/jaryd",
-    backup_name   => "x1-home-$curr_date",
+    backup_name   => "x1-home-",
     skip_dirs     => "aur Dropbox .dropbox* .cache Downloads",
     lockfile      => "/home/backups/backup.home.lock",
     sudo          => "/usr/bin/sudo"
@@ -42,25 +45,67 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
     exit;
 }
 
-my $ret = tar();
+# First we create a local tar copy to have on disk
+my $tar = "/usr/bin/tar";
+my $dest = qq($config{"backup_path"}/$config{"backup_name"}$today.tgz);
 
-sub tar {
-    # tar up home so we always have a fresh one around
-    # always use full paths for security obv
-    my $tar = "/usr/bin/tar";
-    my $dest = qq($config{"backup_path"}/$config{"backup_name"}.tgz);
-    
-    # note that we'll still need to write in the first --exclude as join just inserts between array elements
-    my @excludes = split(/\s/,$config{"skip_dirs"});
-    my $exclude;
-    foreach ( @excludes ) {
-        $exclude .= qq(--exclude='$config{"backup_target"}/$_' );
-    }
-    
-    my $tar_cmd = qq($tar -zcvf $dest $exclude $config{"backup_target"});
-    system($tar_cmd);
+# note that we'll still need to write in the first --exclude as join just inserts between array elements
+my @excludes = split(/\s/,$config{"skip_dirs"});
+my $exclude;
+foreach ( @excludes ) {
+    $exclude .= qq(--exclude='$config{"backup_target"}/$_' );
 }
 
+my $tar_cmd = qq($tar -zcf $dest $exclude $config{"backup_target"});
+my $tar_ret = try_three_times($tar_cmd,"tar");
+die "Tar failed 3 times... something terribly wrong!" unless $tar_ret;
+
+# Phew. Now let's make the a tarsnap version for posterity
+# but first make sure tarsnap isn't already running
+my $grep_out = system("ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1 ");
+die "Tarsnap already working on something..." unless $grep_out;
+
+my $tarsnap = "/usr/bin/tarsnap";
+my $tarsnap_cmd = qq($tarsnap -cf $config{"backup_name"}$today $exclude $config{"backup_target"});
+my $tarsnap_ret = try_three_times($tarsnap_cmd,"tarsnap");
+die "Tarsnap failed 3 times... something terribly wrnog!" unless $tar_ret;
+
+run_cleanup($config{"lockfile"});
+
+sub run_cleanup {
+    my ($touchfile) = @_;
+    system("touch $touchfile");
+
+    my $old_file = qq($config{"backup_path"}/$config{"backup_name"}$yesterday.tgz);
+    if (-e $old_file) {
+        my $un_ret = unlink $old_file;
+        if ($un_ret) {
+            return 1;
+        } else {
+            warn "Error: couldn't unlink tgz: $!";
+            exit;
+        }
+    } 
+} 
+
+# this sub takes a cmd as an arg and tries to execute it 3 times
+# if it doesn't get a 0 exit code it returns 0 back to the caller
+sub try_three_times {
+    my ($cmd,$caller) = @_;
+    my $try = 0;
+    LINE: while ($try <= 2) {
+        print "$caller attempt: $try\n";
+        my $ret = system($cmd);
+        if ($ret) {
+            warn "Something went wrong! Trying again...\n";
+            $try += 1;
+            next LINE;
+        } else {
+            return 1;
+        } 
+    }
+    return 0;
+}
 
 sub check_lockfile {
     my ($touchfile) = @_;
@@ -70,7 +115,7 @@ sub check_lockfile {
     }
 
     my $mtime = ctime(stat($touchfile)->mtime);
-    my @c_date = split(/-/,$curr_date); # 2018-05-15
+    my @c_date = split(/-/,$today); # 2018-05-15
     my @m_date = split(/\s/,$mtime); # Tue May 15 22:25:38 2018
 
     # this comparison is naive b/c i'm lazy and don't want to convert the timestamps
