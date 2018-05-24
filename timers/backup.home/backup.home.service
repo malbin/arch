@@ -1,5 +1,5 @@
 [Unit]
-Description=backup.root
+Description=backup.home
 
 [Service]
-ExecStart=/usr/local/bin/backup.root
+ExecStart=/usr/local/bin/backup.home
