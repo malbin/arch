@@ -59,13 +59,17 @@ foreach ( @excludes ) {
     $exclude .= qq(--exclude='$config{"backup_target"}/$_' );
 }
 
-my $tar_cmd = qq($tar -zcf $dest $exclude $config{"backup_target"});
-my $tar_ret = try_three_times($tar_cmd,"tar");
-die "Tar failed 3 times... something terribly wrong!" unless $tar_ret;
+if (-e $dest) {
+    print "Skipping local tar as file exists: $dest\n";
+} else {
+    my $tar_cmd = qq($tar -zcf $dest $exclude $config{"backup_target"});
+    my $tar_ret = try_three_times($tar_cmd,"tar");
+    die "Tar failed 3 times... something terribly wrong!" unless $tar_ret;
 
-my $chmod_cmd = qq(sudo chmod 600 $dest);
-my $chmod_ret = try_three_times($chmod_cmd,"chmod");
-die "chmod failed 3 times... wat?!!" unless $chmod_ret;
+    my $chmod_cmd = qq(sudo chmod 600 $dest);
+    my $chmod_ret = try_three_times($chmod_cmd,"chmod");
+    die "chmod failed 3 times... wat?!!" unless $chmod_ret;
+}
 
 # Phew. Now let's make the a tarsnap version for posterity
 # but first make sure tarsnap isn't already running
@@ -75,7 +79,7 @@ die "Tarsnap already working on something..." unless $grep_out;
 my $tarsnap = "/usr/bin/tarsnap";
 my $tarsnap_cmd = qq($tarsnap -cf $config{"backup_name"}$today $exclude $config{"backup_target"});
 my $tarsnap_ret = try_three_times($tarsnap_cmd,"tarsnap");
-die "Tarsnap failed 3 times... something terribly wrnog!" unless $tar_ret;
+die "Tarsnap failed 3 times... something terribly wrnog!" unless $tarsnap_ret;
 
 run_cleanup($config{"lockfile"});
 
