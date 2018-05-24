@@ -26,7 +26,7 @@ TARSNAP_D="tarsnap -d --keyfile /root/tarsnap.key" # for deleting, archive names
 
 # Number of daily, weekly and monthly backups to keep:
 DAILY=14
-WEEKLY=12
+WEEKLY=24
 MONTHLY=24
 
 # Preserve backups older than x months:
