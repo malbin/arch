@@ -93,6 +93,14 @@ $dd_ret ? print "dd OK.\n" : die "Error: dd failed";
 my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
 #system ($zero_cmd);
 
+# check to see if tarsnap is busy before attempting upload
+my $grep_cmd = qq(ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1);
+my $grep_ret = system($grep_cmd);
+unless ($grep_ret) {
+    print "tarsnap already running. waiting...";
+    wait_for_tarsnap();
+}
+
 # upload to tarsnap
 # $ts_ret == 1 if successful
 my $ts_ret = tarsnap() if !$debug;
@@ -113,7 +121,18 @@ if (run_cleanup()) {
     exit;
 }
 
-# configure tarsnapper on its own. out of scope of this script.
+sub wait_for_tarsnap {
+    my $grep_count = 1;
+    my $sleep = 6;
+    while ($grep_ret == 0) {
+        print "...";
+        print $grep_count*$sleep . "s" if $grep_count % 10 == 0;
+        sleep $sleep;
+        $grep_ret = system($grep_cmd);
+        $grep_count += 1;
+        print "\n" if $grep_ret;
+    }
+}
 
 sub run_cleanup {
     system("touch $touchfile");
@@ -153,7 +172,7 @@ sub tarsnap {
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
     LINE: while ($try <= 2) {
-        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap -c -f $ts_dst $ts_src 1>/dev/null 2>&1);
+        my $ts_cmd = qq(/usr/bin/echo "tarsnap attempt $try..." && sudo /usr/bin/tarsnap -c -f $ts_dst $ts_src);
         my $ret = system($ts_cmd);
 
         if ($ret) {
@@ -184,7 +203,7 @@ sub dd {
     LINE: while ($try <= 2) {
         # clean up from the failed attempt
         unlink $dd_wc if -e $dd_wc;
-        my $dd_cmd = qq(/usr/bin/echo "dd attempt $try..." && sudo /usr/bin/dd if=$snapshot{"dd_if"} of=$dd_of 1>/dev/null 2>&1);
+        my $dd_cmd = qq(/usr/bin/echo "dd attempt $try..." && sudo /usr/bin/dd if=$snapshot{"dd_if"} of=$dd_of);
         my $ret = system($dd_cmd);
         if ($ret) {
             warn "Something went wrong! Trying again...";

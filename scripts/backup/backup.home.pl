@@ -73,15 +73,33 @@ if (-e $dest) {
 
 # Phew. Now let's make the a tarsnap version for posterity
 # but first make sure tarsnap isn't already running
-my $grep_out = system("ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1 ");
-die "Tarsnap already working on something..." unless $grep_out;
+
+my $grep_cmd = qq(ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1);
+my $grep_ret = system($grep_cmd);
+unless ($grep_ret) {
+    print "tarsnap already running. waiting...";
+    wait_for_tarsnap();
+}
 
 my $tarsnap = "/usr/bin/tarsnap";
 my $tarsnap_cmd = qq($tarsnap -cf $config{"backup_name"}$today $exclude $config{"backup_target"});
 my $tarsnap_ret = try_three_times($tarsnap_cmd,"tarsnap");
-die "Tarsnap failed 3 times... something terribly wrnog!" unless $tarsnap_ret;
+die "tarsnap failed 3 times... something terribly wrong!" unless $tarsnap_ret;
 
 run_cleanup($config{"lockfile"});
+
+sub wait_for_tarsnap {
+    my $grep_count = 1;
+    my $sleep = 6;
+    while ($grep_ret == 0) {
+        print "...";
+        print $grep_count*$sleep . "s" if $grep_count % 10 == 0;
+        sleep $sleep;
+        $grep_ret = system($grep_cmd);
+        $grep_count += 1;
+        print "\n" if $grep_ret;
+    }
+}
 
 sub run_cleanup {
     my ($touchfile) = @_;
