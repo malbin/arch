@@ -63,6 +63,10 @@ my $tar_cmd = qq($tar -zcf $dest $exclude $config{"backup_target"});
 my $tar_ret = try_three_times($tar_cmd,"tar");
 die "Tar failed 3 times... something terribly wrong!" unless $tar_ret;
 
+my $chmod_cmd = qq(sudo chmod 600 $dest);
+my $chmod_ret = try_three_times($chmod_cmd,"chmod");
+die "chmod failed 3 times... wat?!!" unless $chmod_ret;
+
 # Phew. Now let's make the a tarsnap version for posterity
 # but first make sure tarsnap isn't already running
 my $grep_out = system("ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1 ");
