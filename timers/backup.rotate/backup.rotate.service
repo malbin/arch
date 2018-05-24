@@ -1,0 +1,5 @@
+[Unit]
+Description=backup.rotate
+
+[Service]
+ExecStart=/usr/local/bin/tsar -v
