@@ -80,6 +80,9 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
     exit;
 }
 
+# also ensure laptop is plugged in (battery not discharging)
+die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+
 # proceed with img creation
 # subbing out b/c lots of stuff here.
 # $dd_ret == 1 if successful
@@ -232,8 +235,10 @@ sub lv_snap_info {
     return($snap_date,$lv_snap_alloc);
 }
 
-# stable networks
-# only perform backups when on one of these
-sub check_network {
-    return 1;
+sub check_acpi {
+    # return 1 if discharging, 0 if plugged in
+    my $cmd = qq(acpi | grep -i discharg 1>/dev/null 2>&1);
+    my $acpi_ret = system($cmd);
+    $acpi_ret ? return 0 : return 1;
 }
+
