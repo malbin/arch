@@ -6,6 +6,8 @@ use File::stat;
 use Time::localtime;
 use Time::HiRes qq(gettimeofday);
 
+use DDP;
+
 my $t0 = gettimeofday();
 my $debug = 0;
 
@@ -36,6 +38,7 @@ my @trusted_networks = (
 # check lockfile
 die "Lockfile current: nothing to do" unless check_lockfile($config{"lockfile"});
 
+die;
 # before doing anything else confirm we're in a known safe location
 my $curr_network_cmd = qq(iw dev | grep ssid |awk '{print \$2}');
 my $curr_network = qx\$curr_network_cmd\;
@@ -145,8 +148,8 @@ sub check_lockfile {
 
     my $mtime = ctime(stat($touchfile)->mtime);
     my @c_date = split(/-/,$today); # 2018-05-15
-    my @m_date = split(/\s/,$mtime); # Tue May 15 22:25:38 2018
-
+    my @m_date = split(/\s+/,$mtime); # Tue May 15 22:25:38 2018
+    
     # this comparison is naive b/c i'm lazy and don't want to convert the timestamps
     # there is an edge case where if last mtime was the same day number as current day
     # we'll incorrectly assume a backup has been run recently. derp. i don't care.

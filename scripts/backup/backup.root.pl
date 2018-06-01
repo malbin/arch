@@ -153,7 +153,7 @@ sub check_lockfile {
 
     my $mtime = ctime(stat($touchfile)->mtime);
     my @c_date = split(/-/,$curr_date); # 2018-05-15
-    my @m_date = split(/\s/,$mtime); # Tue May 15 22:25:38 2018
+    my @m_date = split(/\s+/,$mtime); # Tue May 15 22:25:38 2018
 
     # this comparison is naive b/c i'm lazy and don't want to convert the timestamps
     # there is an edge case where if last mtime was the same day number as current day
