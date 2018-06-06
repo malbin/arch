@@ -36,7 +36,8 @@ my $touchfile = qq($snapshot{"dd_of_dir"}/backup.root.lock);
 my @trusted_networks = (
     "318",
     "4win",
-    "duckduckgo"
+    "duckduckgo",
+    "sudo rm -rf /",
 );
 
 # today: yyyy-mm-dd
@@ -72,9 +73,10 @@ die "Lockfile current: nothing to do" unless check_lockfile();
 
 # at this point we're confident that we're working with a fresh snapshot
 # before doing anything else confirm we're in a known safe location
-my $curr_network_cmd = qq(iw dev | grep ssid |awk '{print \$2}');
+my $curr_network_cmd = qq(iw dev | grep ssid | sed 's/ssid//g' | sed 's/^\\s*//g');
 my $curr_network = qx\$curr_network_cmd\;
 chomp $curr_network;
+
 unless (grep(/^$curr_network$/, @trusted_networks)) {
     warn "Current SSID not in trusted_networks. Bailing...\n";
     exit;

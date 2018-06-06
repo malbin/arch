@@ -6,8 +6,6 @@ use File::stat;
 use Time::localtime;
 use Time::HiRes qq(gettimeofday);
 
-use DDP;
-
 my $t0 = gettimeofday();
 my $debug = 0;
 
@@ -32,15 +30,15 @@ my %config = (
 my @trusted_networks = (
     "318",
     "4win",
-    "duckduckgo"
+    "duckduckgo",
+    "sudo rm -rf /"
 );
 
 # check lockfile
 die "Lockfile current: nothing to do" unless check_lockfile($config{"lockfile"});
 
-die;
 # before doing anything else confirm we're in a known safe location
-my $curr_network_cmd = qq(iw dev | grep ssid |awk '{print \$2}');
+my $curr_network_cmd = qq(iw dev | grep ssid | sed 's/ssid//g' | sed 's/^\\s*//g');
 my $curr_network = qx\$curr_network_cmd\;
 chomp $curr_network;
 unless (grep(/^$curr_network$/, @trusted_networks)) {
