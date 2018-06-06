@@ -30,7 +30,7 @@ my %config = (
 my @trusted_networks = (
     "318",
     "4win",
-    "duckduckgo",
+    "DDG",
     "sudo rm -rf /"
 );
 
