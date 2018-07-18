@@ -21,7 +21,7 @@ chomp $yesterday;
 my %config = (
     backup_path   => "/home/backups",
     backup_target => "/home/jaryd",
-    backup_name   => "x1-home-",
+    backup_name   => "jaryd-",
     skip_dirs     => "aur Dropbox .dropbox* .cache Downloads",
     lockfile      => "/home/backups/backup.home.lock",
     sudo          => "/usr/bin/sudo"
@@ -29,9 +29,10 @@ my %config = (
 
 my @trusted_networks = (
     "318",
-    "4win",
     "DDG",
-    "sudo rm -rf /"
+    "sudo rm -rf /",
+    "h&s",
+    "Google Starbucks"
 );
 
 # check lockfile
@@ -47,7 +48,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # also ensure laptop is plugged in (battery not discharging)
-die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+#die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
 
 # First we create a local tar copy to have on disk
 my $tar = "/usr/bin/tar";
@@ -83,7 +84,7 @@ unless ($grep_ret) {
 }
 
 my $tarsnap = "/usr/bin/tarsnap";
-my $tarsnap_cmd = qq($tarsnap -cf $config{"backup_name"}$today $exclude $config{"backup_target"});
+my $tarsnap_cmd = qq($tarsnap -cf /x1c6/home/$config{"backup_name"}$today $exclude $config{"backup_target"});
 my $tarsnap_ret = try_three_times($tarsnap_cmd,"tarsnap");
 die "tarsnap failed 3 times... something terribly wrong!" unless $tarsnap_ret;
 

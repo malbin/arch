@@ -24,7 +24,7 @@ my %snapshot = (
     threshold => 75,
     dd_if     => "/dev/mapper/x1-snap01",
     dd_of_dir => "/home/backups",
-    dd_of_app => "x1-snap01",
+    dd_of_app => "snap01",
     dd_bytes  => "53687091200" # total bytes of good img, this should never change
 );
 
@@ -35,9 +35,10 @@ my $touchfile = qq($snapshot{"dd_of_dir"}/backup.root.lock);
 
 my @trusted_networks = (
     "318",
-    "4win",
     "DDG",
     "sudo rm -rf /",
+    "h&s",
+    "Google Starbucks",
 );
 
 # today: yyyy-mm-dd
@@ -83,7 +84,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # also ensure laptop is plugged in (battery not discharging)
-die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+#die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
 
 # proceed with img creation
 # subbing out b/c lots of stuff here.
@@ -169,7 +170,7 @@ sub check_lockfile {
 
 sub tarsnap {
     my $ts_src = qq($snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
-    my $ts_dst = qq($snapshot{"dd_of_app"}.$curr_date.img);
+    my $ts_dst = qq(/x1c6/root/$snapshot{"dd_of_app"}-$curr_date.img);
 
     # 3 tries to upload to tarsnap, same as in sub dd
     my $try = 0;
