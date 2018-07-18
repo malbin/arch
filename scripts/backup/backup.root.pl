@@ -84,7 +84,7 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # also ensure laptop is plugged in (battery not discharging)
-#die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
 
 # proceed with img creation
 # subbing out b/c lots of stuff here.

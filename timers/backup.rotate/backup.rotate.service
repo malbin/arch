@@ -2,4 +2,4 @@
 Description=backup.rotate
 
 [Service]
-ExecStart=/usr/local/bin/tsar -v
+ExecStart=/usr/local/bin/tarsnapper-rotate.bash
