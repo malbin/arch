@@ -39,6 +39,7 @@ my @trusted_networks = (
     "sudo rm -rf /",
     "h&s",
     "Google Starbucks",
+    "Foolish Ventures"
 );
 
 # today: yyyy-mm-dd

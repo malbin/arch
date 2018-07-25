@@ -32,7 +32,8 @@ my @trusted_networks = (
     "DDG",
     "sudo rm -rf /",
     "h&s",
-    "Google Starbucks"
+    "Google Starbucks",
+    "Foolish Ventures"
 );
 
 # check lockfile
