@@ -8,6 +8,7 @@ use Time::HiRes qq(gettimeofday);
 
 my $t0 = gettimeofday();
 my $debug = 0;
+my $skip_batt_check = 0;
 
 # bail if not root
 die "needs root" if $>;
@@ -49,7 +50,9 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # also ensure laptop is plugged in (battery not discharging)
-die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+unless ($skip_batt_check) {
+    die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+}
 
 # First we create a local tar copy to have on disk
 my $tar = "/usr/bin/tar";

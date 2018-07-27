@@ -7,6 +7,7 @@ use Time::localtime;
 use Time::HiRes qq(gettimeofday);
 
 my $start = gettimeofday();
+my $skip_batt_check = 0;
 
 # bail out if not root
 die "needs root" if $>;
@@ -85,7 +86,9 @@ unless (grep(/^$curr_network$/, @trusted_networks)) {
 }
 
 # also ensure laptop is plugged in (battery not discharging)
-die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+unless ($skip_batt_check) {
+    die "Battery discharging: backups only run when laptop plugged in to external power" if check_acpi();
+}
 
 # proceed with img creation
 # subbing out b/c lots of stuff here.
