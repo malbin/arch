@@ -8,7 +8,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "removing expired root snapshots..."
-tarsnapper --target "x1-snap01.\$date.img" --deltas 1d 7d 14d 60d 180d - expire --dry-run
+tarsnapper --target "x1-snap01.\$date.img" --deltas 1d 7d 14d 60d 180d - expire
+tarsnapper --target "/x1c6/root/snap01-\$date.img" --deltas 1d 7d 14d 60d 180d - expire
 
-echo "reomving expired home snapshots..."
-tarsnapper --target "x1-home-\$date" --deltas 1d 7d 14d 60d 180d - expire --dry-run
+echo "removing expired home snapshots..."
+tarsnapper --target "x1-home-\$date" --deltas 1d 7d 14d 60d 180d - expire
+tarsnapper --target "/x1c6/home/jaryd-\$date" --deltas 1d 7d 14d 60d 180d - expire
