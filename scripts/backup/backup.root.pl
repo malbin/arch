@@ -98,7 +98,7 @@ $dd_ret ? print "dd OK.\n" : die "Error: dd failed";
 
 # zero the empty bits
 my $zero_cmd = qq(sudo /usr/bin/zerofree $snapshot{"dd_of_dir"}/$snapshot{"dd_of_app"}.$curr_date.img);
-#system ($zero_cmd);
+system ($zero_cmd);
 
 # check to see if tarsnap is busy before attempting upload
 my $grep_cmd = qq(ps aux |grep tarsnap | grep -v grep 1>/dev/null 2>&1);
