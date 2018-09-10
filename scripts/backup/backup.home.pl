@@ -33,6 +33,7 @@ my @trusted_networks = (
     "DDG",
     "sudo rm -rf /",
     "h&s",
+    "cape",
     "Google Starbucks",
     "Foolish Ventures"
 );
