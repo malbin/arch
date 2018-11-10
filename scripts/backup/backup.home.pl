@@ -42,11 +42,11 @@ my @trusted_networks = (
 die "Lockfile current: nothing to do" unless check_lockfile($config{"lockfile"});
 
 # before doing anything else confirm we're in a known safe location
-my $curr_network_cmd = qq(iw dev | grep ssid | sed 's/ssid//g' | sed 's/^\\s*//g');
+my $curr_network_cmd = qq(iw dev wlp2s0 link | grep -i ssid | sed 's/SSID: //g' | sed 's/^\\s*//g');
 my $curr_network = qx\$curr_network_cmd\;
 chomp $curr_network;
 unless (grep(/^$curr_network$/, @trusted_networks)) {
-    warn "Current SSID not in trusted_networks. Bailing...\n";
+    warn "Current SSID not in trusted_networks:\t$curr_network\n";
     exit;
 }
 
