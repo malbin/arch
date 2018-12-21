@@ -23,7 +23,7 @@ my %config = (
     backup_path   => "/home/backups",
     backup_target => "/home/jaryd",
     backup_name   => "jaryd-",
-    skip_dirs     => "aur Dropbox .dropbox* .cache Downloads",
+    skip_dirs     => "aur Dropbox .dropbox* .cache Downloads Music",
     lockfile      => "/home/backups/backup.home.lock",
     sudo          => "/usr/bin/sudo"
 );
