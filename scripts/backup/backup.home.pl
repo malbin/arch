@@ -35,7 +35,9 @@ my @trusted_networks = (
     "h&s",
     "cape",
     "Google Starbucks",
-    "Foolish Ventures"
+    "Foolish Ventures",
+    "Soltane Guest",
+    "attwifi"
 );
 
 # check lockfile
