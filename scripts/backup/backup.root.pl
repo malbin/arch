@@ -43,7 +43,8 @@ my @trusted_networks = (
     "Google Starbucks",
     "Foolish Ventures",
     "Soltane Guest",
-    "attwifi"
+    "attwifi",
+    "niblam_2.4G"
 );
 
 # today: yyyy-mm-dd
